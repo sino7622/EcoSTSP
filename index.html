@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>南科生態地圖查詢平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js'></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;500;700&display=swap');
+
+        :root {
+            --bg-deep: #0a2a33;
+            --bg-sidebar: #0e343d;
+            --text-cream: #e8e6d1;
+            --accent-green: #d4ff3f;
+        }
+
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-cream);
+            overflow: hidden;
+            font-size: 16px;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .content-area {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            background: var(--bg-deep);
+        }
+
+        /* 底圖切換器樣式 */
+        .leaflet-control-layers {
+            background: rgba(10, 42, 51, 0.95) !important;
+            color: #fff !important;
+            border: 1.5px solid var(--accent-green) !important;
+            border-radius: 8px !important;
+            font-weight: bold;
+        }
+
+        .leaflet-control-layers-list {
+            padding: 5px;
+        }
+
+        /* 標籤樣式 */
+        .leaflet-tooltip-white-right {
+            background: transparent !important;
+            border: none !important;
+            color: #ffffff !important;
+            font-size: 15px !important;
+            font-weight: bold !important;
+            text-shadow: 2px 2px 6px rgba(0, 0, 0, 1);
+            padding: 0 !important;
+        }
+
+        .leaflet-tooltip-shalun {
+            background: var(--text-cream) !important;
+            border: 1.5px solid var(--accent-green) !important;
+            color: var(--bg-deep) !important;
+            border-radius: 4px !important;
+            padding: 8px 14px !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
+        }
+
+        .leaflet-tooltip-other {
+            background: #333333 !important;
+            border: 1.5px solid #555555 !important;
+            color: #bbbbbb !important;
+            border-radius: 4px !important;
+            padding: 8px 14px !important;
+        }
+
+        /* Popup 樣式 */
+        .custom-popup .leaflet-popup-content-wrapper {
+            background: var(--text-cream);
+            color: var(--bg-deep);
+            border-radius: 10px;
+            padding: 12px 12px 0 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .custom-popup .leaflet-popup-content {
+            margin: 0;
+            min-width: 200px;
+            max-width: 650px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .photo-container {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .photo-box {
+            flex: 0 0 125px;
+            aspect-ratio: 1 / 1;
+            background: #000;
+            overflow: hidden;
+            border-radius: 8px;
+            border: 2px solid rgba(10, 42, 51, 0.15);
+        }
+
+        .photo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .popup-text {
+            width: calc(100% + 24px);
+            margin: 0 -12px;
+            padding: 12px;
+            font-size: 15px;
+            text-align: center;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 0 0 10px 10px;
+        }
+
+        /* Marker 樣式 */
+        .ripple-marker {
+            width: 20px;
+            height: 20px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 15px var(--accent-green);
+        }
+
+        .ripple-marker::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: ripple 2s infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(1);
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: scale(5);
+                opacity: 0;
+            }
+        }
+
+        .dot-marker {
+            width: 12px;
+            height: 12px;
+            background: #555;
+            border: 2.5px solid #aaa;
+            border-radius: 50%;
+        }
+
+        /* 側邊欄 */
+        .sidebar-section {
+            background: var(--bg-sidebar);
+            width: 420px;
+        }
+
+        .park-card {
+            background: rgba(232, 230, 209, 0.05);
+            border-left: 5px solid transparent;
+            transition: 0.3s;
+            cursor: pointer;
+            padding: 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .active-park {
+            border-left-color: var(--accent-green) !important;
+            background: rgba(212, 255, 63, 0.12) !important;
+        }
+
+        .tag-building {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #aaa;
+            margin-left: 8px;
+        }
+
+        .copyright {
+            font-size: 11px;
+            color: rgba(232, 230, 209, 0.4);
+            padding: 15px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: #082129;
+        }
+
+        @media (max-width: 1024px) {
+            .content-area {
+                flex-direction: column;
+            }
+
+            .sidebar-section {
+                width: 100%;
+                height: 50%;
+            }
+
+            .map-section {
+                height: 50%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+        <header class="bg-[#082129] border-b border-white/5 p-4 z-30 shrink-0 shadow-2xl text-center md:text-left">
+            <h1 class="text-xl md:text-2xl font-bold text-[#e8e6d1] tracking-wider">南科 <span
+                    class="text-[#d4ff3f]">生態地圖查詢平台</span></h1>
+        </header>
+
+        <div class="content-area">
+            <section class="map-section relative flex-1">
+                <div id="map"></div>
+                <button onclick="resetMap()"
+                    class="absolute top-4 left-4 z-[1000] bg-[#0a2a33]/90 text-[#e8e6d1] p-2.5 rounded shadow-xl hover:bg-[#d4ff3f] hover:text-[#0a2a33] transition-all text-xl">🏠</button>
+            </section>
+
+            <aside class="sidebar-section z-20 flex flex-col">
+                <div class="flex-1 overflow-y-auto p-4 custom-scroll">
+                    <div class="space-y-4 pb-6">
+                        <div id="card-shalun" class="park-card rounded active-park" onclick="zoomToPark('shalun')">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-bold text-[#e8e6d1] text-lg">沙崙園區</h3><span class="text-4xl">🦉</span>
+                            </div>
+                            <p class="text-sm text-[#d4ff3f] mb-3 font-medium">主要物種：草鴞</p>
+                            <a href="https://arcg.is/0juTHK1" target="_blank" onclick="event.stopPropagation();"
+                                class="block w-full bg-[#e8e6d1] text-[#0a2a33] text-center py-2 rounded font-bold text-sm transition-colors hover:bg-white">進入沙崙生態專題
+                                ↗</a>
+                        </div>
+                        <div id="card-chiayi" class="park-card rounded" onclick="zoomToPark('chiayi')">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-md font-bold">嘉義園區 <span class="tag-building">建置中</span></h3>
+                                    <p class="text-xs">黑翅鳶、環頸雉</p>
+                                </div><span class="text-2xl">🦅</span>
+                            </div>
+                        </div>
+                        <div id="card-tainan" class="park-card rounded" onclick="zoomToPark('tainan')">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-md font-bold">台南園區 <span class="tag-building">建置中</span></h3>
+                                    <p class="text-xs">環頸雉、燕鴞</p>
+                                </div><span class="text-2xl">🐦</span>
+                            </div>
+                        </div>
+                        <div id="card-kaohsiung" class="park-card rounded" onclick="zoomToPark('kaohsiung')">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-md font-bold">高雄園區 <span class="tag-building">建置中</span></h3>
+                                    <p class="text-xs">草鴞、環頸雉、燕鴞</p>
+                                </div><span class="text-2xl">🦉</span>
+                            </div>
+                        </div>
+                        <div id="card-qiaotou" class="park-card rounded" onclick="zoomToPark('qiaotou')">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-md font-bold">橋頭園區 <span class="tag-building">建置中</span></h3>
+                                    <p class="text-xs">草鴞</p>
+                                </div><span class="text-2xl">🦉</span>
+                            </div>
+                        </div>
+                        <div id="card-nanzi" class="park-card rounded" onclick="zoomToPark('nanzi')">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-md font-bold">楠梓園區</h3>
+                                    <p class="text-xs">無調查資料</p>
+                                </div><span class="text-2xl">🏗️</span>
+                            </div>
+                        </div>
+                        <div id="card-pingtung" class="park-card rounded" onclick="zoomToPark('pingtung')">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-md font-bold">屏東園區 <span class="tag-building">建置中</span></h3>
+                                    <p class="text-xs">燕鴞、小雲雀</p>
+                                </div><span class="text-2xl">🐥</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <footer class="copyright italic">2026-中興工程顧問股份有限公司</footer>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        const shalunPos = [22.982295279097567, 120.30113538411865];
+        const initialZoom = 10;
+
+        const parkData = {
+            shalun: { name: "沙崙園區", center: [22.91797236899005, 120.31355634588894], bounds: [[22.906, 120.291], [22.931, 120.322]], img: ["img/01草鴞.png"], tip: "沙崙園區 🦉", title: "🦉 主要物種：草鴞", isMain: true },
+            chiayi: { name: "嘉義園區", center: [23.473, 120.303], bounds: [[23.467, 120.296], [23.482, 120.317]], img: ["img/05黑翅鳶.png", "img/02環頸雉.png"], tip: "嘉義園區 🦅", title: "🦅 黑翅鳶、環頸雉" },
+            tainan: { name: "台南園區", center: [23.103, 120.274], bounds: [[23.077, 120.254], [23.129, 120.294]], img: ["img/02環頸雉.png", "img/03燕鴴.png"], tip: "台南園區 🐦", title: "🐦 環頸雉、燕鴞" },
+            kaohsiung: { name: "高雄園區", center: [22.833, 120.264], bounds: [[22.817, 120.244], [22.850, 120.284]], img: ["img/01草鴞.png", "img/02環頸雉.png", "img/03燕鴴.png"], tip: "高雄園區 🦉", title: "🦉 草鴞、環頸雉、燕鴞" },
+            qiaotou: { name: "橋頭園區", center: [22.768, 120.334], bounds: [[22.757, 120.326], [22.780, 120.343]], img: ["img/01草鴞.png"], tip: "橋頭園區 🦉", title: "🦉 主要物種：草鴞" },
+            pingtung: { name: "屏東園區", center: [22.655157, 120.453912], bounds: [[22.651, 120.448], [22.659, 120.461]], img: ["img/03燕鴴.png", "img/04小雲雀.png"], tip: "屏東園區 🐥", title: "🐥 燕鴞、小雲雀" },
+            nanzi: { name: "楠梓園區", center: [22.710, 120.315], bounds: [[22.700, 120.300], [22.720, 120.330]], img: [], tip: "楠梓園區 🏗️", title: "無影像" }
+        };
+
+        // 底圖定義
+        const satellite = L.layerGroup([L.esri.basemapLayer('Imagery'), L.esri.basemapLayer('ImageryLabels')]);
+        const darkGray = L.layerGroup([L.esri.basemapLayer('DarkGray'), L.esri.basemapLayer('DarkGrayLabels')]);
+
+        const map = L.map('map', {
+            zoomControl: false,
+            layers: [satellite]
+        }).setView(shalunPos, initialZoom);
+
+        // 底圖切換
+        const baseMaps = {
+            "衛星影像": satellite,
+            "簡單深灰": darkGray
+        };
+        L.control.layers(baseMaps, null, { position: 'topright', collapsed: false }).addTo(map);
+
+        const markers = {};
+        const overviewLabels = {};
+
+        Object.keys(parkData).forEach(key => {
+            const data = parkData[key];
+            const isShalun = data.isMain;
+            const marker = L.marker(data.center, {
+                icon: L.divIcon({ className: isShalun ? 'ripple-marker' : 'dot-marker', iconSize: [10, 10] })
+            });
+
+            let photoHtml = '<div class="photo-container">';
+            if (data.img.length > 0) {
+                data.img.forEach(src => {
+                    photoHtml += `<div class="photo-box"><img src="${src}" onerror="this.src='https://via.placeholder.com/150?text=NO+IMG'"></div>`;
+                });
+            } else {
+                photoHtml += `<div class="photo-box flex items-center justify-center text-[10px] opacity-30">無影像資料</div>`;
+            }
+            photoHtml += '</div>';
+
+            marker.bindPopup(`<div class="custom-popup">${photoHtml}<div class="popup-text">${data.title}</div></div>`, { closeButton: false, offset: [0, -8] });
+            marker.bindTooltip(data.tip, { permanent: true, direction: 'right', className: isShalun ? 'leaflet-tooltip-shalun' : 'leaflet-tooltip-other', offset: [15, 0] });
+            markers[key] = marker;
+
+            if (!isShalun) {
+                overviewLabels[key] = L.marker(data.center, { icon: L.divIcon({ className: 'invisible', iconSize: [0, 0] }) })
+                    .bindTooltip(data.name, { permanent: true, direction: 'right', className: 'leaflet-tooltip-white-right', offset: [15, 0] });
+                overviewLabels[key].addTo(map);
+            }
+            if (isShalun) marker.addTo(map).openTooltip();
+        });
+
+        omnivore.kml('stsp_boundary.kml').on('ready', function () {
+            this.setStyle({ color: "#d4ff3f", weight: 2, fillOpacity: 0.1 });
+        }).addTo(map);
+
+        function zoomToPark(key) {
+            Object.values(overviewLabels).forEach(l => map.removeLayer(l));
+            Object.keys(markers).forEach(k => { if (!parkData[k].isMain && k !== key) map.removeLayer(markers[k]); });
+
+            markers[key].addTo(map);
+            map.fitBounds(parkData[key].bounds, { padding: [50, 50], animate: true });
+
+            setTimeout(() => {
+                markers[key].openPopup();
+                markers[key].closeTooltip();
+            }, 800);
+
+            document.querySelectorAll('.park-card').forEach(c => c.classList.remove('active-park'));
+            document.getElementById('card-' + key)?.classList.add('active-park');
+            document.getElementById('card-' + key)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function resetMap() {
+            map.setView(shalunPos, initialZoom, { animate: true });
+            Object.keys(markers).forEach(k => {
+                if (parkData[k].isMain) markers[k].addTo(map).openTooltip();
+                else { map.removeLayer(markers[k]); overviewLabels[k].addTo(map); }
+            });
+            map.closePopup();
+        }
+    </script>
+</body>
+
+</html>
