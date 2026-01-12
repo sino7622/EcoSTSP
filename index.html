@@ -340,7 +340,7 @@
 
     <script>
         const shalunPos = [22.982295, 120.301135];
-        const initialZoom = 9;
+        const initialZoom = 10;
 
         const parkData = {
             shalun: { name: "沙崙園區", center: [22.917972, 120.313556], bounds: [[22.906, 120.291], [22.931, 120.322]], img: ["img/01草鴞.png"], tip: "沙崙園區 🦉", title: "草鴞", isMain: true, emoji: "🦉", video: null },
@@ -348,8 +348,9 @@
             tainan: { name: "臺南園區", center: [23.103, 120.274], bounds: [[23.077, 120.254], [23.129, 120.294]], img: ["img/02環頸雉.png", "img/03燕鴴.png"], tip: "台南園區 🐦", title: "環頸雉、燕鴞", emoji: "🐦", video: "gpFHjK8sWDo" },
             kaohsiung: { name: "高雄園區", center: [22.833, 120.264], bounds: [[22.817, 120.244], [22.850, 120.284]], img: ["img/01草鴞.png", "img/02環頸雉.png", "img/03燕鴴.png"], tip: "高雄園區 🦉", title: "草鴞、環頸雉、燕鴞", emoji: "🦉", video: null },
             qiaotou: { name: "橋頭園區", center: [22.768, 120.334], bounds: [[22.757, 120.326], [22.780, 120.343]], img: ["img/01草鴞.png"], tip: "橋頭園區 🦉", title: "草鴞", emoji: "🦉", video: "Q1fYONnFQg4" },
+            nanzi: { name: "楠梓園區", center: [22.710, 120.315], bounds: [[22.700, 120.300], [22.720, 120.330]], img: [], tip: "楠梓園區 🏗️", title: "無調查資料", emoji: "🏗️", video: "ghWUNi5-IQA" },
             pingtung: { name: "屏東園區", center: [22.655157, 120.453912], bounds: [[22.651, 120.448], [22.659, 120.461]], img: ["img/03燕鴴.png", "img/04小雲雀.png"], tip: "屏東園區 🐥", title: "燕鴞、小雲雀", emoji: "🐥", video: null },
-            nanzi: { name: "楠梓園區", center: [22.710, 120.315], bounds: [[22.700, 120.300], [22.720, 120.330]], img: [], tip: "楠梓園區 🏗️", title: "無調查資料", emoji: "🏗️", video: "ghWUNi5-IQA" }
+
         };
 
         const satellite = L.layerGroup([L.esri.basemapLayer('Imagery'), L.esri.basemapLayer('ImageryLabels')]);
