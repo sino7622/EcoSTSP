@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>南科生態地圖查詢平台</title>
+    <title>EcoSTSP - 南科生態地圖查詢平台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -50,17 +50,13 @@
             background: var(--bg-deep);
         }
 
-        /* 底圖切換器樣式 */
+        /* 底圖切換器 */
         .leaflet-control-layers {
             background: rgba(10, 42, 51, 0.95) !important;
             color: #fff !important;
             border: 1.5px solid var(--accent-green) !important;
             border-radius: 8px !important;
             font-weight: bold;
-        }
-
-        .leaflet-control-layers-list {
-            padding: 5px;
         }
 
         /* 標籤樣式 */
@@ -92,6 +88,15 @@
             padding: 8px 14px !important;
         }
 
+        .tag-building {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #aaa;
+            margin-left: 8px;
+        }
+
         /* Popup 樣式 */
         .custom-popup .leaflet-popup-content-wrapper {
             background: var(--text-cream);
@@ -103,8 +108,7 @@
 
         .custom-popup .leaflet-popup-content {
             margin: 0;
-            min-width: 200px;
-            max-width: 650px;
+            min-width: 220px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -120,11 +124,11 @@
         }
 
         .photo-box {
-            flex: 0 0 125px;
+            flex: 0 0 100px;
             aspect-ratio: 1 / 1;
             background: #000;
             overflow: hidden;
-            border-radius: 8px;
+            border-radius: 50%;
             border: 2px solid rgba(10, 42, 51, 0.15);
         }
 
@@ -145,7 +149,74 @@
             border-radius: 0 0 10px 10px;
         }
 
-        /* Marker 樣式 */
+        /* 播放按鈕 */
+        .popup-play-btn {
+            background: var(--bg-deep);
+            color: var(--accent-green);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .popup-play-btn:hover {
+            transform: scale(1.05);
+            background: #000;
+        }
+
+        /* 影片浮動視窗 (Video Modal) */
+        #video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-wrapper {
+            width: 90%;
+            max-width: 1000px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .modal-content {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid var(--accent-green);
+        }
+
+        .btn-close-modal {
+            background: var(--accent-green);
+            color: var(--bg-deep);
+            padding: 12px 40px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-close-modal:hover {
+            transform: scale(1.1);
+            background: #fff;
+        }
+
+        /* Marker 與 側邊欄維持基準樣式... */
         .ripple-marker {
             width: 20px;
             height: 20px;
@@ -188,7 +259,6 @@
             border-radius: 50%;
         }
 
-        /* 側邊欄 */
         .sidebar-section {
             background: var(--bg-sidebar);
             width: 420px;
@@ -206,24 +276,6 @@
         .active-park {
             border-left-color: var(--accent-green) !important;
             background: rgba(212, 255, 63, 0.12) !important;
-        }
-
-        .tag-building {
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 3px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #aaa;
-            margin-left: 8px;
-        }
-
-        .copyright {
-            font-size: 11px;
-            color: rgba(232, 230, 209, 0.4);
-            padding: 15px;
-            text-align: center;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            background: #082129;
         }
 
         @media (max-width: 1024px) {
@@ -259,65 +311,7 @@
 
             <aside class="sidebar-section z-20 flex flex-col">
                 <div class="flex-1 overflow-y-auto p-4 custom-scroll">
-                    <div class="space-y-4 pb-6">
-                        <div id="card-shalun" class="park-card rounded active-park" onclick="zoomToPark('shalun')">
-                            <div class="flex justify-between items-center">
-                                <h3 class="font-bold text-[#e8e6d1] text-lg">沙崙園區</h3><span class="text-4xl">🦉</span>
-                            </div>
-                            <p class="text-sm text-[#d4ff3f] mb-3 font-medium">主要物種：草鴞</p>
-                            <a href="https://arcg.is/0juTHK1" target="_blank" onclick="event.stopPropagation();"
-                                class="block w-full bg-[#e8e6d1] text-[#0a2a33] text-center py-2 rounded font-bold text-sm transition-colors hover:bg-white">進入沙崙生態專題
-                                ↗</a>
-                        </div>
-                        <div id="card-chiayi" class="park-card rounded" onclick="zoomToPark('chiayi')">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <h3 class="text-md font-bold">嘉義園區 <span class="tag-building">建置中</span></h3>
-                                    <p class="text-xs">黑翅鳶、環頸雉</p>
-                                </div><span class="text-2xl">🦅</span>
-                            </div>
-                        </div>
-                        <div id="card-tainan" class="park-card rounded" onclick="zoomToPark('tainan')">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <h3 class="text-md font-bold">台南園區 <span class="tag-building">建置中</span></h3>
-                                    <p class="text-xs">環頸雉、燕鴞</p>
-                                </div><span class="text-2xl">🐦</span>
-                            </div>
-                        </div>
-                        <div id="card-kaohsiung" class="park-card rounded" onclick="zoomToPark('kaohsiung')">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <h3 class="text-md font-bold">高雄園區 <span class="tag-building">建置中</span></h3>
-                                    <p class="text-xs">草鴞、環頸雉、燕鴞</p>
-                                </div><span class="text-2xl">🦉</span>
-                            </div>
-                        </div>
-                        <div id="card-qiaotou" class="park-card rounded" onclick="zoomToPark('qiaotou')">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <h3 class="text-md font-bold">橋頭園區 <span class="tag-building">建置中</span></h3>
-                                    <p class="text-xs">草鴞</p>
-                                </div><span class="text-2xl">🦉</span>
-                            </div>
-                        </div>
-                        <div id="card-nanzi" class="park-card rounded" onclick="zoomToPark('nanzi')">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <h3 class="text-md font-bold">楠梓園區</h3>
-                                    <p class="text-xs">無調查資料</p>
-                                </div><span class="text-2xl">🏗️</span>
-                            </div>
-                        </div>
-                        <div id="card-pingtung" class="park-card rounded" onclick="zoomToPark('pingtung')">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <h3 class="text-md font-bold">屏東園區 <span class="tag-building">建置中</span></h3>
-                                    <p class="text-xs">燕鴞、小雲雀</p>
-                                </div><span class="text-2xl">🐥</span>
-                            </div>
-                        </div>
-
+                    <div class="space-y-4 pb-6" id="sidebar-list">
                     </div>
                 </div>
                 <footer class="copyright italic">2026-中興工程顧問股份有限公司</footer>
@@ -325,57 +319,69 @@
         </div>
     </div>
 
+    <div id="video-modal" onclick="closeVideo()">
+        <div class="modal-wrapper" onclick="event.stopPropagation()">
+            <div class="modal-content">
+                <iframe id="video-player" src="" style="width:100%; height:100%; border:none;" allowfullscreen
+                    allow="autoplay"></iframe>
+            </div>
+            <div class="btn-close-modal" onclick="closeVideo()">✖ 關閉並回到地圖</div>
+        </div>
+    </div>
+
     <script>
-        const shalunPos = [22.982295279097567, 120.30113538411865];
-        const initialZoom = 10;
+        const shalunPos = [22.982295, 120.301135];
+        const initialZoom = 9;
 
         const parkData = {
-            shalun: { name: "沙崙園區", center: [22.91797236899005, 120.31355634588894], bounds: [[22.906, 120.291], [22.931, 120.322]], img: ["img/01草鴞.png"], tip: "沙崙園區 🦉", title: "🦉 主要物種：草鴞", isMain: true },
-            chiayi: { name: "嘉義園區", center: [23.473, 120.303], bounds: [[23.467, 120.296], [23.482, 120.317]], img: ["img/05黑翅鳶.png", "img/02環頸雉.png"], tip: "嘉義園區 🦅", title: "🦅 黑翅鳶、環頸雉" },
-            tainan: { name: "台南園區", center: [23.103, 120.274], bounds: [[23.077, 120.254], [23.129, 120.294]], img: ["img/02環頸雉.png", "img/03燕鴴.png"], tip: "台南園區 🐦", title: "🐦 環頸雉、燕鴞" },
-            kaohsiung: { name: "高雄園區", center: [22.833, 120.264], bounds: [[22.817, 120.244], [22.850, 120.284]], img: ["img/01草鴞.png", "img/02環頸雉.png", "img/03燕鴴.png"], tip: "高雄園區 🦉", title: "🦉 草鴞、環頸雉、燕鴞" },
-            qiaotou: { name: "橋頭園區", center: [22.768, 120.334], bounds: [[22.757, 120.326], [22.780, 120.343]], img: ["img/01草鴞.png"], tip: "橋頭園區 🦉", title: "🦉 主要物種：草鴞" },
-            pingtung: { name: "屏東園區", center: [22.655157, 120.453912], bounds: [[22.651, 120.448], [22.659, 120.461]], img: ["img/03燕鴴.png", "img/04小雲雀.png"], tip: "屏東園區 🐥", title: "🐥 燕鴞、小雲雀" },
-            nanzi: { name: "楠梓園區", center: [22.710, 120.315], bounds: [[22.700, 120.300], [22.720, 120.330]], img: [], tip: "楠梓園區 🏗️", title: "無影像" }
+            shalun: { name: "沙崙園區", center: [22.917972, 120.313556], bounds: [[22.906, 120.291], [22.931, 120.322]], img: ["img/01草鴞.png"], tip: "沙崙園區 🦉", title: "草鴞", isMain: true, emoji: "🦉", video: null },
+            chiayi: { name: "嘉義園區", center: [23.473, 120.303], bounds: [[23.467, 120.296], [23.482, 120.317]], img: ["img/05黑翅鳶.png", "img/02環頸雉.png"], tip: "嘉義園區 🦅", title: "黑翅鳶、環頸雉", emoji: "🦅", video: "qS8UrHwn8RI" },
+            tainan: { name: "臺南園區", center: [23.103, 120.274], bounds: [[23.077, 120.254], [23.129, 120.294]], img: ["img/02環頸雉.png", "img/03燕鴴.png"], tip: "台南園區 🐦", title: "環頸雉、燕鴞", emoji: "🐦", video: "gpFHjK8sWDo" },
+            kaohsiung: { name: "高雄園區", center: [22.833, 120.264], bounds: [[22.817, 120.244], [22.850, 120.284]], img: ["img/01草鴞.png", "img/02環頸雉.png", "img/03燕鴴.png"], tip: "高雄園區 🦉", title: "草鴞、環頸雉、燕鴞", emoji: "🦉", video: null },
+            qiaotou: { name: "橋頭園區", center: [22.768, 120.334], bounds: [[22.757, 120.326], [22.780, 120.343]], img: ["img/01草鴞.png"], tip: "橋頭園區 🦉", title: "草鴞", emoji: "🦉", video: "Q1fYONnFQg4" },
+            pingtung: { name: "屏東園區", center: [22.655157, 120.453912], bounds: [[22.651, 120.448], [22.659, 120.461]], img: ["img/03燕鴴.png", "img/04小雲雀.png"], tip: "屏東園區 🐥", title: "燕鴞、小雲雀", emoji: "🐥", video: null },
+            nanzi: { name: "楠梓園區", center: [22.710, 120.315], bounds: [[22.700, 120.300], [22.720, 120.330]], img: [], tip: "楠梓園區 🏗️", title: "無調查資料", emoji: "🏗️", video: "ghWUNi5-IQA" }
         };
 
-        // 底圖定義
         const satellite = L.layerGroup([L.esri.basemapLayer('Imagery'), L.esri.basemapLayer('ImageryLabels')]);
         const darkGray = L.layerGroup([L.esri.basemapLayer('DarkGray'), L.esri.basemapLayer('DarkGrayLabels')]);
 
-        const map = L.map('map', {
-            zoomControl: false,
-            layers: [satellite]
-        }).setView(shalunPos, initialZoom);
-
-        // 底圖切換
-        const baseMaps = {
-            "衛星影像": satellite,
-            "簡單深灰": darkGray
-        };
-        L.control.layers(baseMaps, null, { position: 'topright', collapsed: false }).addTo(map);
+        const map = L.map('map', { zoomControl: false, layers: [satellite] }).setView(shalunPos, initialZoom);
+        L.control.layers({ "衛星影像": satellite, "簡單深灰": darkGray }, null, { position: 'topright', collapsed: false }).addTo(map);
 
         const markers = {};
         const overviewLabels = {};
+        const sidebar = document.getElementById('sidebar-list');
 
         Object.keys(parkData).forEach(key => {
             const data = parkData[key];
             const isShalun = data.isMain;
-            const marker = L.marker(data.center, {
-                icon: L.divIcon({ className: isShalun ? 'ripple-marker' : 'dot-marker', iconSize: [10, 10] })
-            });
+
+            // 生成側邊欄卡片
+            const card = document.createElement('div');
+            card.id = `card-${key}`;
+            card.className = `park-card rounded ${isShalun ? 'active-park' : ''}`;
+            card.onclick = () => zoomToPark(key);
+            card.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <div><h3 class="text-md font-bold">${data.name} ${!isShalun ? '<span class="tag-building">建置中</span>' : ''}</h3><p class="text-xs opacity-70">${data.title}</p></div>
+                    <span class="text-2xl">${data.emoji}</span>
+                </div>
+            `;
+            sidebar.appendChild(card);
+
+            // 生成地圖標記
+            const marker = L.marker(data.center, { icon: L.divIcon({ className: isShalun ? 'ripple-marker' : 'dot-marker', iconSize: [12, 12] }) });
 
             let photoHtml = '<div class="photo-container">';
             if (data.img.length > 0) {
-                data.img.forEach(src => {
-                    photoHtml += `<div class="photo-box"><img src="${src}" onerror="this.src='https://via.placeholder.com/150?text=NO+IMG'"></div>`;
-                });
-            } else {
-                photoHtml += `<div class="photo-box flex items-center justify-center text-[10px] opacity-30">無影像資料</div>`;
-            }
+                data.img.forEach(src => { photoHtml += `<div class="photo-box"><img src="${src}"></div>`; });
+            } else { photoHtml += `<div class="photo-box flex items-center justify-center text-[10px] opacity-20">N/A</div>`; }
             photoHtml += '</div>';
 
-            marker.bindPopup(`<div class="custom-popup">${photoHtml}<div class="popup-text">${data.title}</div></div>`, { closeButton: false, offset: [0, -8] });
+            let playBtn = data.video ? `<div class="popup-play-btn" onclick="openVideo('${key}')">▶ 播放114年10月空拍影像</div>` : '';
+
+            marker.bindPopup(`<div class="custom-popup">${photoHtml}${playBtn}<div class="popup-text">${data.name}</div></div>`, { closeButton: false, offset: [0, -8] });
             marker.bindTooltip(data.tip, { permanent: true, direction: 'right', className: isShalun ? 'leaflet-tooltip-shalun' : 'leaflet-tooltip-other', offset: [15, 0] });
             markers[key] = marker;
 
@@ -387,25 +393,29 @@
             if (isShalun) marker.addTo(map).openTooltip();
         });
 
-        omnivore.kml('stsp_boundary.kml').on('ready', function () {
-            this.setStyle({ color: "#d4ff3f", weight: 2, fillOpacity: 0.1 });
-        }).addTo(map);
+        omnivore.kml('stsp_boundary.kml').on('ready', function () { this.setStyle({ color: "#d4ff3f", weight: 2, fillOpacity: 0.1 }); }).addTo(map);
+
+        function openVideo(key) {
+            const data = parkData[key];
+            if (!data.video) return;
+            if (key === 'pingtung') { window.open(data.video, '_blank'); return; }
+            document.getElementById('video-player').src = `https://www.youtube.com/embed/${data.video}?autoplay=1`;
+            document.getElementById('video-modal').style.display = 'flex';
+        }
+
+        function closeVideo() {
+            document.getElementById('video-modal').style.display = 'none';
+            document.getElementById('video-player').src = "";
+        }
 
         function zoomToPark(key) {
             Object.values(overviewLabels).forEach(l => map.removeLayer(l));
             Object.keys(markers).forEach(k => { if (!parkData[k].isMain && k !== key) map.removeLayer(markers[k]); });
-
             markers[key].addTo(map);
             map.fitBounds(parkData[key].bounds, { padding: [50, 50], animate: true });
-
-            setTimeout(() => {
-                markers[key].openPopup();
-                markers[key].closeTooltip();
-            }, 800);
-
+            setTimeout(() => { markers[key].openPopup(); markers[key].closeTooltip(); }, 800);
             document.querySelectorAll('.park-card').forEach(c => c.classList.remove('active-park'));
             document.getElementById('card-' + key)?.classList.add('active-park');
-            document.getElementById('card-' + key)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function resetMap() {
@@ -415,6 +425,8 @@
                 else { map.removeLayer(markers[k]); overviewLabels[k].addTo(map); }
             });
             map.closePopup();
+            document.querySelectorAll('.park-card').forEach(c => c.classList.remove('active-park'));
+            document.getElementById('card-shalun').classList.add('active-park');
         }
     </script>
 </body>
