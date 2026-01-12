@@ -367,16 +367,24 @@
             const data = parkData[key];
             const isShalun = data.isMain;
 
-            // 生成側邊欄卡片
+            // 1. 側邊欄生成 (含沙崙專屬按鈕)
             const card = document.createElement('div');
             card.id = `card-${key}`;
-            card.className = `park-card rounded ${isShalun ? 'active-park' : ''}`;
+            card.className = `park-card rounded ${isShalun ? 'active-park' : 'opacity-60'}`;
             card.onclick = () => zoomToPark(key);
+
+            let cardBtn = isShalun ? `
+                <a href="https://arcg.is/0juTHK1" target="_blank" onclick="event.stopPropagation();" 
+                   class="block w-full bg-[#e8e6d1] text-[#0a2a33] text-center py-2 mt-3 rounded font-bold text-sm transition-colors hover:bg-white">
+                   進入沙崙生態專題 ↗
+                </a>` : '';
+
             card.innerHTML = `
                 <div class="flex justify-between items-center">
-                    <div><h3 class="text-md font-bold">${data.name} ${!isShalun ? '<span class="tag-building">建置中</span>' : ''}</h3><p class="text-xs opacity-70">${data.title}</p></div>
+                    <div><h3 class="text-md font-bold">${data.name}</h3><p class="text-xs opacity-70">${data.title}</p></div>
                     <span class="text-2xl">${data.emoji}</span>
                 </div>
+                ${cardBtn}
             `;
             sidebar.appendChild(card);
 
