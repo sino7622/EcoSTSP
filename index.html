@@ -301,6 +301,108 @@
                 height: 50%;
             }
         }
+
+        /* 標記容器：讓內層元素疊在一起 */
+        .custom-map-marker {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .icon-img-wrapper {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid var(--accent-green);
+            background: #000;
+            z-index: 2;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .icon-img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .marker-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 30px;
+            height: 30px;
+        }
+
+        /* 圖片外框：圓形裁切 */
+        .icon-img-box {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid #fff;
+            /* 一般園區用白邊 */
+            z-index: 2;
+            background: #333;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 沙崙園區特別強調樣式 */
+        .icon-img-box.main-highlight {
+            width: 32px;
+            height: 32px;
+            border: 2px solid var(--accent-green);
+            /* 沙崙用螢光綠邊 */
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .icon-img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 漣漪動畫：確保在圖片下方 */
+        .ripple-marker {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            z-index: 1;
+            /* 置於圖片下方 */
+        }
+
+        /* 非沙崙園區的靜態底點（選配） */
+        .dot-marker-bg {
+            position: absolute;
+            width: 55px;
+            height: 55px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        /* 如果是沙崙園區，讓光圈在圖片下方 */
+        .ripple-marker {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        /* 側邊欄圖片同步 */
+        .park-card .park-icon-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
     </style>
 </head>
 
@@ -343,14 +445,13 @@
         const initialZoom = 10;
 
         const parkData = {
-            shalun: { name: "沙崙園區", center: [22.917972, 120.313556], bounds: [[22.906, 120.291], [22.931, 120.322]], img: ["img/01草鴞.png"], tip: "沙崙園區", title: "草鴞", isMain: true, emoji: "💚", video: null },
-            chiayi: { name: "嘉義園區", center: [23.473, 120.303], bounds: [[23.467, 120.296], [23.482, 120.317]], img: ["img/05黑翅鳶.png", "img/02環頸雉.png"], tip: "嘉義園區", title: "黑翅鳶、環頸雉", emoji: "💚", video: "qS8UrHwn8RI" },
-            tainan: { name: "臺南園區", center: [23.103, 120.274], bounds: [[23.077, 120.254], [23.129, 120.294]], img: ["img/02環頸雉.png", "img/03燕鴴.png"], tip: "台南園區", title: "環頸雉、燕鴞", emoji: "💚", video: "gpFHjK8sWDo" },
-            kaohsiung: { name: "高雄園區", center: [22.833, 120.264], bounds: [[22.817, 120.244], [22.850, 120.284]], img: ["img/01草鴞.png", "img/02環頸雉.png", "img/03燕鴴.png"], tip: "高雄園區", title: "草鴞、環頸雉、燕鴞", emoji: "💚", video: null },
-            qiaotou: { name: "橋頭園區", center: [22.768, 120.334], bounds: [[22.757, 120.326], [22.780, 120.343]], img: ["img/01草鴞.png"], tip: "橋頭園區", title: "草鴞", emoji: "💚", video: "Q1fYONnFQg4" },
-            nanzi: { name: "楠梓園區", center: [22.710, 120.315], bounds: [[22.700, 120.300], [22.720, 120.330]], img: [], tip: "楠梓園區 🏗️", title: "無調查資料", emoji: "🏗️", video: "ghWUNi5-IQA" },
-            pingtung: { name: "屏東園區", center: [22.655157, 120.453912], bounds: [[22.651, 120.448], [22.659, 120.461]], img: ["img/03燕鴴.png", "img/04小雲雀.png"], tip: "屏東園區", title: "燕鴞、小雲雀", emoji: "💚", video: null },
-
+            shalun: { name: "沙崙園區", center: [22.917972, 120.313556], bounds: [[22.906, 120.291], [22.931, 120.322]], img: ["img/01草鴞.png"], tip: "沙崙園區", title: "草鴞", isMain: true, icon: "img/icon_shalun.png", video: null },
+            chiayi: { name: "嘉義園區", center: [23.473, 120.303], bounds: [[23.467, 120.296], [23.482, 120.317]], img: ["img/05黑翅鳶.png", "img/02環頸雉.png"], tip: "嘉義園區", title: "黑翅鳶、環頸雉", icon: "img/icon_chiayi.png", video: "qS8UrHwn8RI" },
+            tainan: { name: "臺南園區", center: [23.103, 120.274], bounds: [[23.077, 120.254], [23.129, 120.294]], img: ["img/02環頸雉.png", "img/03燕鴴.png"], tip: "臺南園區", title: "環頸雉、燕鴞", icon: "img/icon_tainan.png", video: "gpFHjK8sWDo" },
+            kaohsiung: { name: "高雄園區", center: [22.833, 120.264], bounds: [[22.817, 120.244], [22.850, 120.284]], img: ["img/01草鴞.png", "img/02環頸雉.png", "img/03燕鴴.png"], tip: "高雄園區", title: "草鴞、環頸雉、燕鴞", icon: "img/icon_kaohsiung.png", video: null },
+            qiaotou: { name: "橋頭園區", center: [22.768, 120.334], bounds: [[22.757, 120.326], [22.780, 120.343]], img: ["img/01草鴞.png"], tip: "橋頭園區", title: "草鴞", icon: "img/icon_qiaotou.png", video: "Q1fYONnFQg4" },
+            nanzi: { name: "楠梓園區", center: [22.710, 120.315], bounds: [[22.700, 120.300], [22.720, 120.330]], img: [], tip: "楠梓園區", title: "無調查資料", icon: "img/icon_nanzi.png", video: "ghWUNi5-IQA" },
+            pingtung: { name: "屏東園區", center: [22.655157, 120.453912], bounds: [[22.651, 120.448], [22.659, 120.461]], img: ["img/03燕鴴.png", "img/04小雲雀.png"], tip: "屏東園區", title: "燕鴞、小雲雀", icon: "img/icon_pingtung.png", video: null },
         };
 
         const satellite = L.layerGroup([L.esri.basemapLayer('Imagery'), L.esri.basemapLayer('ImageryLabels')]);
@@ -367,6 +468,20 @@
             const data = parkData[key];
             const isShalun = data.isMain;
 
+            // 定義自定義圖片 Icon
+            const customIcon = L.divIcon({
+                className: 'custom-map-marker',
+                html: `
+            <div class="${isShalun ? 'ripple-marker' : ''}"></div>
+            <div class="icon-img-wrapper">
+                <img src="${data.icon}" onerror="this.src='https://via.placeholder.com/30?text=ECO'">
+            </div>
+        `,
+                iconSize: [36, 36],
+                iconAnchor: [18, 18]
+            });
+
+
             // 1. 側邊欄生成 (含沙崙專屬按鈕)
             const card = document.createElement('div');
             card.id = `card-${key}`;
@@ -382,14 +497,28 @@
             card.innerHTML = `
                 <div class="flex justify-between items-center">
                     <div><h3 class="text-md font-bold">${data.name}</h3><p class="text-xs opacity-70">${data.title}</p></div>
-                    <span class="text-2xl">${data.emoji}</span>
+                    <img src="${data.icon}" class="park-icon-img" onerror="this.style.display='none'">
                 </div>
                 ${cardBtn}
             `;
             sidebar.appendChild(card);
 
-            // 生成地圖標記
-            const marker = L.marker(data.center, { icon: L.divIcon({ className: isShalun ? 'ripple-marker' : 'dot-marker', iconSize: [12, 12] }) });
+            // 合併後的 Marker 生成邏輯
+            const marker = L.marker(data.center, {
+                icon: L.divIcon({
+                    className: 'custom-map-marker', // 使用自定義類名以套用 CSS
+                    html: `
+            <div class="marker-container">
+                ${isShalun ? '<div class="ripple-marker"></div>' : '<div class="dot-marker-bg"></div>'}
+                <div class="icon-img-box ${isShalun ? 'main-highlight' : ''}">
+                    <img src="${data.icon}" class="park-icon-img" onerror="this.style.display='none'">
+                </div>
+            </div>
+        `,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15] // 確保圖標中心對準座標
+                })
+            });
 
             let photoHtml = '<div class="photo-container">';
             if (data.img.length > 0) {
